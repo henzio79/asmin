@@ -20,6 +20,7 @@ namespace ASM_UI.Controllers
         // GET: mutationApproval
         public ActionResult Index()
         {
+			//update by hendy
             var _qry = (from dr in db.tr_mutation_request
                         where (dr.fl_active == true && dr.deleted_date == null)                                
                                //&& (dr.request_dept_id == UserProfile.department_id || 15 == UserProfile.user_type_id)
