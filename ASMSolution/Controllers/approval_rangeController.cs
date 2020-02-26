@@ -21,34 +21,34 @@ namespace ASM_UI.Controllers
             return View();
             //_db.ms_approval_range.ToList()
         }
-        
+
         public JsonResult List(string sidx, string sord, int page, int rows, bool _search, string searchField, string searchOper, string searchString)
         {
             sord = (sord == null) ? "" : sord;
             int pageIndex = Convert.ToInt32(page) - 1;
             int pageSize = rows;
 
-            var ApprovalRange = from approval in db.ms_approval_range
-                                where (approval.deleted_date == null)
-                                join u in db.ms_user on approval.updated_by equals u.user_id
+            var ApprovalRange = from apv in db.ms_approval_range
+                                where (apv.deleted_date == null)
+                                join u in db.ms_user on apv.updated_by equals u.user_id
                                 into t_joined
                                 from row_join in t_joined.DefaultIfEmpty()
                                 from usr in db.ms_user.Where(rec_updated_by => (rec_updated_by == null) ? false : rec_updated_by.user_id == row_join.user_id).DefaultIfEmpty()
                                 select new
                                 {
-                                    approval.range_id,
-                                    approval.range_type,
-                                    approval.range_code,
-                                    approval.range_min,
-                                    approval.range_max,
-                                    approval.fl_active,
-                                    rec_isactive = (approval.fl_active == true) ? "Yes" : "No",
-                                    approval.created_by,
-                                    approval.created_date,
+                                    apv.range_id,
+                                    apv.range_type,
+                                    apv.range_code,
+                                    apv.range_min,
+                                    apv.range_max,
+                                    apv.fl_active,
+                                    rec_isactive = (apv.fl_active == true) ? "Yes" : "No",
+                                    apv.created_by,
+                                    apv.created_date,
                                     updated_by = (usr == null) ? string.Empty : usr.user_name,
-                                    updated_date = approval.updated_date,
-                                    approval.deleted_by,
-                                    approval.deleted_date
+                                    updated_date = apv.updated_date
+                                    //apv.deleted_by,
+                                    //apv.deleted_date
                                 };
             // search function
             if (_search)
@@ -96,19 +96,23 @@ namespace ASM_UI.Controllers
         [HttpPost]
         public JsonResult CrudApproval()
         {
-            decimal RangeMin, RangeMax;
-            Decimal.TryParse(Request.Form["range_min"], out RangeMin);
-            Decimal.TryParse(Request.Form["range_max"], out RangeMax);
+            decimal RangeMin = 0, RangeMax = 0;
 
             if (Request.Form["oper"] == "add")
             {
+                if (Request.Form["range_min"] != null)
+                    Decimal.TryParse(Request.Form["range_min"].Replace(",", ""), out RangeMin);
+
+                if (Request.Form["range_max"] != null)
+                    Decimal.TryParse(Request.Form["range_max"].Replace(",", ""), out RangeMax);
+
                 //prepare for insert data
                 ms_approval_range ms_approval_range = new ms_approval_range();
                 ms_approval_range.range_code = Request.Form["range_code"];
                 ms_approval_range.range_type = Request.Form["range_type"];
                 ms_approval_range.range_min = RangeMin;
                 ms_approval_range.range_max = RangeMax;
-                ms_approval_range.fl_active = Request.Form["rec_isactive"] == "Yes" ? true : false;
+                ms_approval_range.fl_active = Request.Form["rec_isactive"].ToLower() == "yes" ? true : false;
 
                 ms_approval_range.created_by = UserProfile.UserId;
                 ms_approval_range.created_date = DateTime.Now;
@@ -120,10 +124,19 @@ namespace ASM_UI.Controllers
 
                 db.Entry(ms_approval_range).State = EntityState.Added;
                 db.SaveChanges();
+                
                 return Json("Insert Approval Range Data Success!", JsonRequestBehavior.AllowGet);
+
             }
             else if (Request.Form["oper"] == "edit")
             {
+                
+                if (Request.Form["range_min"] != null)
+                    Decimal.TryParse(Request.Form["range_min"].Replace(",", ""), out RangeMin);
+
+                if (Request.Form["range_max"] != null)
+                    Decimal.TryParse(Request.Form["range_max"].Replace(",", ""), out RangeMax);
+
                 if (IsNumeric(Request.Form["range_id"].ToString()))
                 {
                     //prepare for update data
@@ -133,11 +146,11 @@ namespace ASM_UI.Controllers
                     ms_approval_range.range_type = Request.Form["range_type"];
                     ms_approval_range.range_min = RangeMin;
                     ms_approval_range.range_max = RangeMax;
-                    ms_approval_range.fl_active = Request.Form["rec_isactive"] == "Yes" ? true : false;
+                    ms_approval_range.fl_active = Request.Form["rec_isactive"].ToLower() == "yes" ? true : false;
 
                     ms_approval_range.updated_by = UserProfile.UserId;
                     ms_approval_range.updated_date = DateTime.Now;
-                    
+
                     db.Entry(ms_approval_range).State = EntityState.Modified;
                     db.SaveChanges();
                     return Json("Update Asset Register PIC Data Success!", JsonRequestBehavior.AllowGet);
@@ -150,7 +163,7 @@ namespace ASM_UI.Controllers
                     ms_approval_range.range_type = Request.Form["range_type"];
                     ms_approval_range.range_min = RangeMin;
                     ms_approval_range.range_max = RangeMax;
-                    ms_approval_range.fl_active = Request.Form["rec_isactive"] == "Yes" ? true : false;
+                    ms_approval_range.fl_active = Request.Form["rec_isactive"].ToLower() == "yes" ? true : false;
 
                     ms_approval_range.created_by = UserProfile.UserId;
                     ms_approval_range.created_date = DateTime.Now;

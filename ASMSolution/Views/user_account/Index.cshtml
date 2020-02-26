@@ -75,7 +75,7 @@
                 datatype: "json",
                 mtype: 'Get',
                 height: 'auto',
-                colNames: ['Actions', '', '', 'NIK', 'Employee Name', 'Email', 'User Name', 'IsActive', 'Modified Date', 'Modified By', ''],
+                colNames: ['Actions', '', '', 'NIK', 'Employee Name', 'Email', 'User Name','User Type', 'IsActive', 'Modified Date', 'Modified By', ''],
                 colModel: [
                     { name: 'act', index: 'act', sortable: false, width: 12, search: false },
                     { name: 'user_id', index: 'user_id', editable: false, hidden: true, editrules: { edithidden: false }, key: true },
@@ -84,6 +84,7 @@
                     { name: 'employee_name', index: 'employee_name', sortable: true, editable: false, width: 35 },
                     { name: 'employee_email', index: 'employee_email', sortable: true, editable: false, width: 35 },
                     { name: 'user_name', index: 'user_name', sortable: true, editable: false, width: 20 },
+                    { name: 'user_type_name', index: 'user_type_name', sortable: true, editable: false, width: 20 },
                     { name: 'rec_isactive', index: 'rec_isactive', sortable: true, editable: false, width: 10, edittype: 'select', editoptions: { value: 'Yes:Yes;No:No' }, search: false },
                     { name: 'rec_modified_date', index: 'rec_modified_date', sortable: true, editable: false, width: 25, formatter: "date", formatoptions: { newformat: "m/d/Y H:i:s" }, search: false },
                     { name: 'rec_modified_by', index: 'rec_modified_by', sortable: true, sortorder: 'asc', editable: false, width: 15 },
@@ -122,7 +123,7 @@
                     repeatitems: false,
                     Id: "0"
                 },
-                editurl: '/user_account/Cruduser_account',
+                editurl: '/user_account/Cruduser_account/',
                 caption: "User Account",
                 emptyrecords: 'No Currency Records are Available to Display',
                 multiselect: false,

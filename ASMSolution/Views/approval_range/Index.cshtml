@@ -52,130 +52,135 @@
 
 @section pagespecific {
     <script type="text/javascript">
-    $(document).ready(function () {
+        $(document).ready(function () {
 
-        pageSetUp();
-        jQuery("#jqgrid").jqGrid({
-            url: '/approval_range/List',
-            datatype: "json",
-            mtype: 'Get',
-            height: 'auto',
-            colNames: ['Actions', '', 'Range Code', 'Range Type', 'Range Min', 'Range Max', 'IsActive', 'Last Modified'],
-            colModel: [
-                { name: 'act', index: 'act', sortable: false, width: 15 },
-                { name: 'range_id', key: true, index: 'range_id', width: 10, editable: false, hidden: true, editrules: { edithidden: false } },
-                { name: 'range_code', index: 'range_code', sortable: true, editable: true, width: 20 },
-                { name: 'range_type', index: 'range_type', sortable: true, editable: true, width: 25 },
-                { name: 'range_min', index: 'range_min', sortable: true, editable: true, width: 20 },
-                { name: 'range_max', index: 'range_max', sortable: true, editable: true, width: 25 },
+            pageSetUp();
+            jQuery("#jqgrid").jqGrid({
+                url: '/approval_range/List',
+                datatype: "json",
+                mtype: 'Get',
+                height: 'auto',
+                colNames: ['Actions', '', 'Code', 'Range Type', 'Range Min', 'Range Max', 'IsActive', 'Modified Date', 'Modified By'],
+                colModel: [
+                    { name: 'act', index: 'act', sortable: false, width: 15 },
+                    { name: 'range_id', key: true, index: 'range_id', width: 10, editable: false, hidden: true, editrules: { edithidden: false } },
+                    { name: 'range_code', index: 'range_code', sortable: true, editable: true, width: 20, align: "center", editoptions: { size: 15, maxlength: 5 }, editrules: { required: true } },
+                    { name: 'range_type', index: 'range_type', sortable: true, editable: true, width: 25, align: "center", editoptions: { size: 20, maxlength: 18 } },  // ,
+                    { name: 'range_min', index: 'range_min', sortable: true, editable: true, width: 20, align: 'right', formatter: 'integer', formatoptions: { thousandsSeparator: ',' }, editoptions: { thousandsSeparator: ',' } },   // align: 'right', editrules: { required: true }
+                    { name: 'range_max', index: 'range_max', sortable: true, editable: true, width: 25, align: 'right', formatter: 'integer', formatoptions: { thousandsSeparator: ',' } },   // , editrules: { required: true }
+                    { name: 'rec_isactive', index: 'rec_isactive', sortable: true, editable: true, width: 15, align: "center", edittype: 'select', editoptions: { value: 'Yes:Yes;No:No' } },
 
-                { name: 'rec_isactive', index: 'rec_isactive', sortable: true, editable: true, width: 15, edittype: 'select', editoptions: { value: 'Yes:Yes;No:No' } },
-                //{ name: 'updated_date', index: 'updated_date', sortable: true, editable: false, width: 20, formatter: "date", formatoptions: { newformat: "m/d/Y H:i:s" } }
-                { name: 'updated_by', index: 'updated_by', sortable: true, editable: false, width: 20 }
-            ],
+                    { name: 'updated_date', index: 'updated_date', sortable: true, editable: false, width: 20, align: "center", formatter: "date", formatoptions: { newformat: "m/d/Y H:i:s" } },
+                    { name: 'updated_by', index: 'updated_by', sortable: true, editable: false, width: 20, align: "center" }
+                ],
 
-            rowNum: 10,
-            rowList: [10, 20, 30],
-            pager: '#pjqgrid',
-            sortname: 'range_code',
-            toolbarfilter: true,
-            viewrecords: true,
-            sortorder: "asc",
-            gridComplete: function () {
-                var ids = jQuery("#jqgrid").jqGrid('getDataIDs');
-                for (var i = 0; i < ids.length; i++) {
-                    var cl = ids[i];
-                    be = "<button class='btn btn-xs btn-default' data-original-title='Edit Row' onclick=\"jQuery('#jqgrid').editRow('" + cl +"');\"><i class='fa fa-pencil'></i></button>";
-                    se = "<button class='btn btn-xs btn-default' data-original-title='Save Row' onclick=\"jQuery('#jqgrid').saveRow('" + cl + "');\"><i class='fa fa-save'></i></button>";
-                    ca = "<button class='btn btn-xs btn-default' data-original-title='Cancel' onclick=\"jQuery('#jqgrid').restoreRow('" + cl + "');\"><i class='fa fa-times'></i></button>";
-                    //ce = "<button class='btn btn-xs btn-default' onclick=\"jQuery('#jqgrid').restoreRow('"+cl+"');\"><i class='fa fa-times'></i></button>";
-                    //jQuery("#jqgrid").jqGrid('setRowData',ids[i],{act:be+se+ce});
-                    jQuery("#jqgrid").jqGrid('setRowData', ids[i], {
-                        act: be + se + ca
-                    });
-                }
-            },
-            jsonReader: {
-                root: "rows",
-                page: "page",
-                total: "total",
-                records: "records",
-                repeatitems: false,
-                Id: "0"
-            },
-            editurl: '/approval_range/CrudApproval',
-            caption: "Approval Range List",
-            emptyrecords: 'No Approval Range Records are Available to Display',
-            multiselect: true,
-            autowidth: true,
+                rowNum: 10,
+                rowList: [10, 20, 30],
+                pager: '#pjqgrid',
+                sortname: 'range_code',
+                toolbarfilter: true,
+                viewrecords: true,
+                sortorder: "asc",
+                gridComplete: function () {
+                    var ids = jQuery("#jqgrid").jqGrid('getDataIDs');
+                    for (var i = 0; i < ids.length; i++) {
+                        var cl = ids[i];
+                        be = "<button class='btn btn-xs btn-default' data-original-title='Edit Row' onclick=\"jQuery('#jqgrid').editRow('" + cl + "');\"><i class='fa fa-pencil'></i></button>";
+                        se = "<button class='btn btn-xs btn-default' data-original-title='Save Row' onclick=\"jQuery('#jqgrid').saveRow('" + cl + "');\"><i class='fa fa-save'></i></button>";
+                        ca = "<button class='btn btn-xs btn-default' data-original-title='Cancel' onclick=\"jQuery('#jqgrid').restoreRow('" + cl + "');\"><i class='fa fa-times'></i></button>";
+                        de = "<button class='btn btn-xs btn-default' data-original-title='Delete' onclick=\"jQuery('#jqgrid').delGridRow('" + cl + "');\"><i class='fa fa-trash-o'></i></button>";
 
-        });
-        jQuery("#jqgrid").jqGrid('navGrid', "#pjqgrid", {
-            edit: false,
-            add: false,
-            del: true,
-            refresh: true,
-            closeAfterSearch: true
-        }, {
-            zIndex: 100,
-            caption: "Search Approval Range",
-            sopt: ['eq', 'ne', 'lt', 'le', 'gt', 'ge', 'bw', 'bn', 'ew', 'en', 'cn', 'nc', 'nu', 'nn', 'in', 'ni'],
-            closeAfterSearch: true
-        });
-        jQuery("#jqgrid").jqGrid('inlineNav', "#pjqgrid", {
-            edit: false,
-        });
-        /* Add tooltips */
-        $('.navtable .ui-pg-button').tooltip({
-            container: 'body'
-        });
+                        //ce = "<button class='btn btn-xs btn-default' onclick=\"jQuery('#jqgrid').restoreRow('"+cl+"');\"><i class='fa fa-times'></i></button>";
+                        //jQuery("#jqgrid").jqGrid('setRowData',ids[i],{act:be+se+ce});
+                        jQuery("#jqgrid").jqGrid('setRowData', ids[i], {
+                            act: be + se + ca + de
+                        });
+                    }
+                },
+                jsonReader: {
+                    root: "rows",
+                    page: "page",
+                    total: "total",
+                    records: "records",
+                    repeatitems: false,
+                    Id: "0"
+                },
+                editurl: '/approval_range/CrudApproval',
+                caption: "Approval Range List",
+                emptyrecords: 'No Approval Range Records are Available to Display',
+                multiselect: false,
+                autowidth: true,
 
-        jQuery("#m1").click(function () {
-            var s;
-            s = jQuery("#jqgrid").jqGrid('getGridParam', 'selarrrow');
-            alert(s);
-        });
-        jQuery("#m1s").click(function () {
-            jQuery("#jqgrid").jqGrid('setSelection', "13");
-        });
+            });
 
-        // remove classes
-        $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
-        $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
-        $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
-        $(".ui-jqgrid-pager").removeClass("ui-state-default");
-        $(".ui-jqgrid").removeClass("ui-widget-content");
+            jQuery("#jqgrid").jqGrid('navGrid', "#pjqgrid", {
+                edit: false,
+                add: false,
+                del: true,
+                refresh: true,
+                closeAfterSearch: true
+            }, {
+                zIndex: 100,
+                caption: "Search Approval Range",
+                sopt: ['eq', 'ne', 'lt', 'le', 'gt', 'ge', 'bw', 'bn', 'ew', 'en', 'cn', 'nc', 'nu', 'nn', 'in', 'ni'],
+                closeAfterSearch: true
+            });
 
-        // add classes
-        $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
-        $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+            jQuery("#jqgrid").jqGrid('inlineNav', "#pjqgrid", {
+                edit: false,
+            });
 
-        $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
-        $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
-        $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
-        $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
-        $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
-        $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
-        $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
-        $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+            /* Add tooltips */
+            $('.navtable .ui-pg-button').tooltip({
+                container: 'body'
+            });
 
-        $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
-        $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+            jQuery("#m1").click(function () {
+                var s;
+                s = jQuery("#jqgrid").jqGrid('getGridParam', 'selarrrow');
+                alert(s);
+            });
+            jQuery("#m1s").click(function () {
+                jQuery("#jqgrid").jqGrid('setSelection', "13");
+            });
 
-        $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
-        $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+            // remove classes
+            $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+            $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+            $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+            $(".ui-jqgrid-pager").removeClass("ui-state-default");
+            $(".ui-jqgrid").removeClass("ui-widget-content");
 
-        $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
-        $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+            // add classes
+            $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+            $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
 
-        $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
-        $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+            $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+            $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+            $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+            $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+            $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+            $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+            $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+            $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
 
-    })
+            $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+            $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
 
-    $(window).on('resize.jqGrid', function () {
-        $("#jqgrid").jqGrid('setGridWidth', $("#content").width());
-    })
+            $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+            $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+
+            $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+            $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+
+            $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+            $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+
+        })
+
+        $(window).on('resize.jqGrid', function () {
+            $("#jqgrid").jqGrid('setGridWidth', $("#content").width());
+        })
 
     </script>
 }

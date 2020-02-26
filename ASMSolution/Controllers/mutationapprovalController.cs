@@ -6,6 +6,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web;
+using System.Data.SqlClient;
 using System.Web.Mvc;
 using ASM_UI.Models;
 using ASM_UI.App_Helpers;
@@ -20,243 +21,10 @@ namespace ASM_UI.Controllers
         // GET: mutationApproval
         public ActionResult Index()
         {
-			//update by hendy
+            //return View();
+            
             var _qry = (from dr in db.tr_mutation_request
-                        where (dr.fl_active == true && dr.deleted_date == null)                                
-                               //&& (dr.request_dept_id == UserProfile.department_id || 15 == UserProfile.user_type_id)
-                               //&& (dr.request_dept_id == UserProfile.department_id || 13 == UserProfile.user_type_id)
-                        //dr.org_id == UserProfile.OrgId &&
-                        //&& dr.request_location_id == UserProfile.asset_reg_location_id
-
-                        join da in db.tr_mutation_approval on dr.request_id equals da.request_id
-                        where (da.fl_active == true && da.deleted_date == null) 
-                        && da.approval_employee_id == UserProfile.employee_id
-
-                        //mengambil job level terakhir yg belum di approve
-                        join app in (from app in db.tr_mutation_approval
-                                     where (app.approval_date == null && app.fl_active == true && app.deleted_date == null)
-                                     orderby app.approval_id ascending
-                                     group app by app.request_id into appsort
-                                     select appsort.FirstOrDefault())
-                                    on da.request_id equals app.request_id
-                        where da.approval_employee_id == app.approval_employee_id
-
-                        join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
-                        //where (a.fl_active == true && a.deleted_date == null)
-
-                        join b in db.ms_asmin_company on a.company_id equals b.company_id
-                        where (b.fl_active == true && b.deleted_date == null)
-
-                        join c in db.ms_department on dr.transfer_to_dept_id equals c.department_id
-                        where (c.fl_active == true && c.deleted_date == null)
-
-                        join d in db.ms_employee on dr.transfer_to_emp_id equals d.employee_id
-                        where (d.fl_active == true && d.deleted_date == null)
-
-                        join e in db.ms_asset_register_location on dr.transfer_to_location_id equals e.asset_reg_location_id
-                        where (e.fl_active == true && e.deleted_date == null)
-
-                        join f in db.ms_request_status on da.approval_status_id equals f.request_status_id
-
-                        select new AssetMutationViewModel()
-                        {
-                            asset_id = dr.asset_id,
-                            asset_parent = a,
-
-                            request_code = dr.request_code,
-                            request_id = dr.request_id,
-                            request_date = dr.request_date,
-                            request_status_name = f.request_status_name,
-                            fl_approval = dr.fl_approval,
-                            approval_date = dr.approval_date,
-                            approval_status_id = da.approval_status_id,
-
-                            company = b,
-                            department_name = c.department_code,
-                            employee_name = d.employee_name,
-                            location_name = e.asset_reg_location_name
-                        }).ToList<AssetMutationViewModel>();
-
-            var _qry2 = (from dr in db.tr_mutation_request
-                         where (dr.fl_active == true && dr.deleted_date == null)
-                         //       && dr.request_dept_id == UserProfile.department_id
-                         //dr.org_id == UserProfile.OrgId &&
-                         //&& dr.request_location_id == UserProfile.asset_reg_location_id
-
-                         join da in db.tr_mutation_approval on dr.request_id equals da.request_id
-                         where (da.fl_active == true && da.deleted_date == null)
-                         && da.approval_employee_id == UserProfile.employee_id && da.approval_date != null
-
-                         ////mengambil job level terakhir yg belum di approve
-                         //join app in (from app in db.tr_mutation_approval
-                         //             where (app.approval_date == null && app.fl_active == true && app.deleted_date == null)
-                         //             orderby app.approval_id ascending
-                         //             group app by app.request_id into appsort
-                         //             select appsort.FirstOrDefault())
-                         //            on da.request_id equals app.request_id
-                         //where da.approval_employee_id == app.approval_employee_id
-
-                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
-                         //where (a.fl_active == true && a.deleted_date == null)
-
-                         join b in db.ms_asmin_company on a.company_id equals b.company_id
-                         where (b.fl_active == true && b.deleted_date == null)
-
-                         join c in db.ms_department on dr.transfer_to_dept_id equals c.department_id
-                         where (c.fl_active == true && c.deleted_date == null)
-
-                         join d in db.ms_employee on dr.transfer_to_emp_id equals d.employee_id
-                         where (d.fl_active == true && d.deleted_date == null)
-
-                         join e in db.ms_asset_register_location on dr.transfer_to_location_id equals e.asset_reg_location_id
-                         where (e.fl_active == true && e.deleted_date == null)
-
-                         join f in db.ms_request_status on da.approval_status_id equals f.request_status_id
-
-                         select new AssetMutationViewModel()
-                         {
-                             asset_id = dr.asset_id,
-                             asset_parent = a,
-
-                             request_code = dr.request_code,
-                             request_id = dr.request_id,
-                             request_date = dr.request_date,
-                             request_status_name = f.request_status_name,
-                             fl_approval = dr.fl_approval,
-                             approval_date = dr.approval_date,
-                             approval_status_id = da.approval_status_id,
-
-                             company = b,
-                             department_name = c.department_code,
-                             employee_name = d.employee_name,
-                             location_name = e.asset_reg_location_name
-                         }).ToList<AssetMutationViewModel>();
-
-            _qry.AddRange(_qry2);
-
-            return View(_qry);
-        }
-
-        public ViewResult MutationViewByBoss()
-        {
-            var _qry = (from dr in db.tr_mutation_request
-                        where (dr.fl_active == true && dr.deleted_date == null)
-                        //       && dr.request_dept_id == UserProfile.department_id
-                        //dr.org_id == UserProfile.OrgId &&
-                        //&& dr.request_location_id == UserProfile.asset_reg_location_id
-
-                        join da in db.tr_mutation_approval on dr.request_id equals da.request_id
-                        where (da.fl_active == true && da.deleted_date == null) 
-                        && da.approval_employee_id == UserProfile.employee_id
-
-                        //mengambil job level terakhir yg belum di approve
-                        join app in (from app in db.tr_mutation_approval
-                                     where (app.approval_date == null && app.fl_active == true && app.deleted_date == null)
-                                     orderby app.approval_id ascending
-                                     group app by app.request_id into appsort
-                                     select appsort.FirstOrDefault())
-                                    on da.request_id equals app.request_id
-                        where da.approval_employee_id == app.approval_employee_id
-
-                        join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
-                        //where (a.fl_active == true && a.deleted_date == null)
-
-                        join b in db.ms_asmin_company on a.company_id equals b.company_id
-                        where (b.fl_active == true && b.deleted_date == null)
-
-                        join c in db.ms_department on dr.transfer_to_dept_id equals c.department_id
-                        where (c.fl_active == true && c.deleted_date == null)
-
-                        join d in db.ms_employee on dr.transfer_to_emp_id equals d.employee_id
-                        where (d.fl_active == true && d.deleted_date == null)
-
-                        join e in db.ms_asset_register_location on dr.transfer_to_location_id equals e.asset_reg_location_id
-                        where (e.fl_active == true && e.deleted_date == null)
-
-                        join f in db.ms_request_status on da.approval_status_id equals f.request_status_id
-
-                        select new AssetMutationViewModel()
-                        {
-                            asset_id = dr.asset_id,
-                            asset_parent = a,
-
-                            request_code = dr.request_code,
-                            request_id = dr.request_id,
-                            request_date = dr.request_date,
-                            request_status_name = f.request_status_name,
-                            fl_approval = dr.fl_approval,
-                            approval_date = dr.approval_date,
-                            approval_status_id = da.approval_status_id,
-
-                            company = b,
-                            department_name = c.department_code,
-                            employee_name = d.employee_name,
-                            location_name = e.asset_reg_location_name
-                        }).ToList<AssetMutationViewModel>();
-
-            var _qry2 = (from dr in db.tr_mutation_request
-                         where (dr.fl_active == true && dr.deleted_date == null)
-                        //        && dr.request_dept_id == UserProfile.department_id
-                         //dr.org_id == UserProfile.OrgId &&
-                         //&& dr.request_location_id == UserProfile.asset_reg_location_id
-
-                         join da in db.tr_mutation_approval on dr.request_id equals da.request_id
-                         where (da.fl_active == true && da.deleted_date == null)
-                         && da.approval_employee_id == UserProfile.employee_id && da.approval_date != null
-
-                         ////mengambil job level terakhir yg belum di approve
-                         //join app in (from app in db.tr_mutation_approval
-                         //             where (app.approval_date == null && app.fl_active == true && app.deleted_date == null)
-                         //             orderby app.approval_id ascending
-                         //             group app by app.request_id into appsort
-                         //             select appsort.FirstOrDefault())
-                         //            on da.request_id equals app.request_id
-                         //where da.approval_employee_id == app.approval_employee_id
-
-                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
-                         //where (a.fl_active == true && a.deleted_date == null)
-
-                         join b in db.ms_asmin_company on a.company_id equals b.company_id
-                         where (b.fl_active == true && b.deleted_date == null)
-
-                         join c in db.ms_department on dr.transfer_to_dept_id equals c.department_id
-                         where (c.fl_active == true && c.deleted_date == null)
-
-                         join d in db.ms_employee on dr.transfer_to_emp_id equals d.employee_id
-                         where (d.fl_active == true && d.deleted_date == null)
-
-                         join e in db.ms_asset_register_location on dr.transfer_to_location_id equals e.asset_reg_location_id
-                         where (e.fl_active == true && e.deleted_date == null)
-
-                         join f in db.ms_request_status on da.approval_status_id equals f.request_status_id
-
-                         select new AssetMutationViewModel()
-                         {
-                             asset_id = dr.asset_id,
-                             asset_parent = a,
-
-                             request_code = dr.request_code,
-                             request_id = dr.request_id,
-                             request_date = dr.request_date,
-                             request_status_name = f.request_status_name,
-                             fl_approval = dr.fl_approval,
-                             approval_date = dr.approval_date,
-                             approval_status_id = da.approval_status_id,
-
-                             company = b,
-                             department_name = c.department_code,
-                             employee_name = d.employee_name,
-                             location_name = e.asset_reg_location_name
-                         }).ToList<AssetMutationViewModel>();
-
-            _qry.AddRange(_qry2);
-
-            return View(_qry);
-        }
-        public ViewResult MutationViewByDept()
-        {
-            var _qry = (from dr in db.tr_mutation_request
-                        where (dr.fl_active == true && dr.deleted_date == null)
+                        where (dr.fl_active == true && dr.deleted_date == null) && dr.request_status != 3
                                && dr.request_dept_id == UserProfile.department_id
                         //dr.org_id == UserProfile.OrgId &&
                         //&& dr.request_location_id == UserProfile.asset_reg_location_id
@@ -275,6 +43,65 @@ namespace ASM_UI.Controllers
 
                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
                         //where (a.fl_active == true && a.deleted_date == null)
+                        into t_a
+                        from ta in t_a.DefaultIfEmpty()
+
+                        join b in db.ms_asmin_company on ta.company_id equals b.company_id
+                        where (b.fl_active == true && b.deleted_date == null)
+
+                        join c in db.ms_department on dr.transfer_to_dept_id equals c.department_id
+                        where (c.fl_active == true && c.deleted_date == null)
+
+                        join d in db.ms_employee on dr.transfer_to_emp_id equals d.employee_id
+                        where (d.fl_active == true && d.deleted_date == null)
+
+                        join e in db.ms_asset_register_location on dr.transfer_to_location_id equals e.asset_reg_location_id
+                        where (e.fl_active == true && e.deleted_date == null)
+
+                        join f in db.ms_request_status on da.approval_status_id equals f.request_status_id
+                        into t_f
+                        from tf in t_f.DefaultIfEmpty()
+
+                        select new AssetMutationViewModel()
+                        {
+                            asset_id = dr.asset_id,
+                            asset_parent = ta,
+
+                            request_code = dr.request_code,
+                            request_id = dr.request_id,
+                            request_date = dr.request_date,
+                            request_status_name = tf.request_status_name,
+                            fl_approval = dr.fl_approval,
+                            approval_date = dr.approval_date,
+                            approval_status_id = da.approval_status_id,
+
+                            company = b,
+                            department_name = c.department_code,
+                            employee_name = d.employee_name,
+                            location_name = e.asset_reg_location_name
+                        }).ToList<AssetMutationViewModel>();
+
+            var _qry2 = (from dr in db.tr_mutation_request
+                        where (dr.fl_active == true && dr.deleted_date == null) && dr.request_status != 3
+                               && dr.request_dept_id == UserProfile.department_id
+                        //dr.org_id == UserProfile.OrgId &&
+                        //&& dr.request_location_id == UserProfile.asset_reg_location_id
+
+                        join da in db.tr_mutation_approval on dr.request_id equals da.request_id
+                        where (da.fl_active == true && da.deleted_date == null) 
+                        && da.approval_employee_id == UserProfile.employee_id && da.approval_date != null
+
+                        ////mengambil job level terakhir yg belum di approve
+                        //join app in (from app in db.tr_mutation_approval
+                        //             where (app.approval_date == null && app.fl_active == true && app.deleted_date == null)
+                        //             orderby app.approval_id ascending
+                        //             group app by app.request_id into appsort
+                        //             select appsort.FirstOrDefault())
+                        //            on da.request_id equals app.request_id
+                        //where da.approval_employee_id == app.approval_employee_id
+
+                        join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
+                        //where (a.fl_active == true && a.deleted_date == null)
 
                         join b in db.ms_asmin_company on a.company_id equals b.company_id
                         where (b.fl_active == true && b.deleted_date == null)
@@ -309,64 +136,13 @@ namespace ASM_UI.Controllers
                             location_name = e.asset_reg_location_name
                         }).ToList<AssetMutationViewModel>();
 
-            var _qry2 = (from dr in db.tr_mutation_request
-                         where (dr.fl_active == true && dr.deleted_date == null)
-                                && dr.request_dept_id == UserProfile.department_id
-                         //dr.org_id == UserProfile.OrgId &&
-                         //&& dr.request_location_id == UserProfile.asset_reg_location_id
-
-                         join da in db.tr_mutation_approval on dr.request_id equals da.request_id
-                         where (da.fl_active == true && da.deleted_date == null)
-                         && da.approval_employee_id == UserProfile.employee_id && da.approval_date != null
-
-                         ////mengambil job level terakhir yg belum di approve
-                         //join app in (from app in db.tr_mutation_approval
-                         //             where (app.approval_date == null && app.fl_active == true && app.deleted_date == null)
-                         //             orderby app.approval_id ascending
-                         //             group app by app.request_id into appsort
-                         //             select appsort.FirstOrDefault())
-                         //            on da.request_id equals app.request_id
-                         //where da.approval_employee_id == app.approval_employee_id
-
-                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
-                         //where (a.fl_active == true && a.deleted_date == null)
-
-                         join b in db.ms_asmin_company on a.company_id equals b.company_id
-                         where (b.fl_active == true && b.deleted_date == null)
-
-                         join c in db.ms_department on dr.transfer_to_dept_id equals c.department_id
-                         where (c.fl_active == true && c.deleted_date == null)
-
-                         join d in db.ms_employee on dr.transfer_to_emp_id equals d.employee_id
-                         where (d.fl_active == true && d.deleted_date == null)
-
-                         join e in db.ms_asset_register_location on dr.transfer_to_location_id equals e.asset_reg_location_id
-                         where (e.fl_active == true && e.deleted_date == null)
-
-                         join f in db.ms_request_status on da.approval_status_id equals f.request_status_id
-
-                         select new AssetMutationViewModel()
-                         {
-                             asset_id = dr.asset_id,
-                             asset_parent = a,
-
-                             request_code = dr.request_code,
-                             request_id = dr.request_id,
-                             request_date = dr.request_date,
-                             request_status_name = f.request_status_name,
-                             fl_approval = dr.fl_approval,
-                             approval_date = dr.approval_date,
-                             approval_status_id = da.approval_status_id,
-
-                             company = b,
-                             department_name = c.department_code,
-                             employee_name = d.employee_name,
-                             location_name = e.asset_reg_location_name
-                         }).ToList<AssetMutationViewModel>();
-
             _qry.AddRange(_qry2);
 
+            
+
+
             return View(_qry);
+
         }
 
         public ActionResult approval(int? id)
@@ -409,12 +185,11 @@ namespace ASM_UI.Controllers
         {
             var _qry = (from t in db.tr_mutation_request
                         where t.fl_active == true && t.deleted_date == null && t.request_id == id
-                        //&& t.request_dept_id == UserProfile.department_id
+                        && t.request_dept_id == UserProfile.department_id
                         //&& t.org_id == UserProfile.OrgId 
 
                         join da in db.tr_mutation_approval on t.request_id equals da.request_id
-                        where da.fl_active == true && da.deleted_date == null 
-                        && da.approval_employee_id == UserProfile.employee_id
+                        where da.fl_active == true && da.deleted_date == null && da.approval_employee_id == UserProfile.employee_id
                                 //&& da.approval_date == null && da.approval_status_id == 1
 
                         join a in db.tr_depreciation on t.asset_id equals a.asset_id

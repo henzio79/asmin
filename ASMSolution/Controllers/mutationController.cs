@@ -363,7 +363,7 @@ namespace ASM_UI.Controllers
                 {
                     try
                     {
-                        //Save Request Mutasi
+                        //Save Request Disposal
                         tr_mutation_request mutation_request = new tr_mutation_request();
                         mutation_request.request_code = MutationNumberNew(mutation_req.asset_id);
                         mutation_request.asset_id = mutation_req.asset_id;
@@ -390,7 +390,7 @@ namespace ASM_UI.Controllers
 
                         mutation_request = db.tr_mutation_request.Add(mutation_request);
                         db.SaveChanges();
-                        //var x = UserProfile.OrgId;
+                        var x = UserProfile.OrgId;
                         //Save Approval List Mutation Untuk Dept Head
                         //Hendy 22 Feb 2020
                         var _qry = (from sa in db.sy_ref_approval_level
@@ -457,7 +457,7 @@ namespace ASM_UI.Controllers
 
                         if (isKTTApproval)
                         {
-                            //var x_ktt = UserProfile.OrgId;
+                            var x_ktt = UserProfile.OrgId;
                             //Save Approval List Mutation Untuk Dept Head
                             //Hendy 22 Feb 2020
                             var _qry_ktt = (from sa in db.sy_ref_approval_level
@@ -467,12 +467,10 @@ namespace ASM_UI.Controllers
                                         where (a.fl_active == true && a.deleted_date == null)
 
                                         join b in db.ms_employee_detail on a.job_level_id equals b.job_level_id
-                                        where (b.fl_active == true && b.deleted_date == null) 
-                                        && b.company_id == UserProfile.company_id 
-                                        && b.asset_reg_location_id == UserProfile.asset_reg_location_id
+                                        where (b.fl_active == true && b.deleted_date == null) && b.company_id == UserProfile.company_id
 
                                         join c in db.ms_employee on b.employee_id equals c.employee_id
-                                        where c.employee_id == b.employee_id 
+                                        where c.employee_id == UserProfile.employee_id
 
                                         orderby sa.order_no ascending
                                         select new AssetMutationViewModel()
@@ -489,15 +487,15 @@ namespace ASM_UI.Controllers
 
                             if (_qry_ktt != null)
                             {
-                                foreach (AssetMutationViewModel refApprovalktt in _qry_ktt)
+                                foreach (AssetMutationViewModel refApproval in _qry_ktt)
                                 {
                                     tr_mutation_approval mutation_approval = new tr_mutation_approval();
                                     mutation_approval.request_id = mutation_request.request_id;
                                     mutation_approval.approval_date = null;
                                     mutation_approval.approval_location_id = /*refApproval.request_location_id*/ 0;
-                                    mutation_approval.approval_dept_id = refApprovalktt.request_dept_id;
-                                    mutation_approval.approval_employee_id = refApprovalktt.request_emp_id;
-                                    mutation_approval.approval_level_id = refApprovalktt.request_level_id;
+                                    mutation_approval.approval_dept_id = refApproval.request_dept_id;
+                                    mutation_approval.approval_employee_id = refApproval.request_emp_id;
+                                    mutation_approval.approval_level_id = refApproval.request_level_id;
                                     mutation_approval.approval_status_id = 1;//waiting approval
                                     mutation_approval.approval_noted = "";
                                     mutation_approval.fl_active = true;
@@ -524,86 +522,31 @@ namespace ASM_UI.Controllers
 
                         if (isBODApproval)
                         {
-                            //ms_department dept = db.ms_department.Find(UserProfile.department_id);
-                            var _qry_Bod = (from sa in db.sy_ref_approval_level
-                                            where sa.asset_reg_location_id == mutation_req.current_location_id 
-                                            && sa.job_level_id == 9 
-
-                                            join a in db.ms_job_level on sa.job_level_id equals a.job_level_id
-                                            where (a.fl_active == true && a.deleted_date == null)
-
-                                            join b in db.ms_employee_detail on a.job_level_id equals b.job_level_id
-                                            where (b.fl_active == true && b.deleted_date == null)
-                                            && b.company_id == UserProfile.company_id                                            
-
-                                            join c in db.ms_employee on b.employee_id equals c.employee_id
-
-                                            join e in db.ms_department on c.employee_id equals e.employee_bod_id
-                                            where e.department_id == UserProfile.department_id
-
-                                            orderby sa.order_no ascending
-                                            select new AssetMutationViewModel()
-                                            {
-                                                //request_location_id = b.loca
-                                                request_dept_id = b.department_id,
-                                                request_emp_id = b.employee_id,
-                                                request_level_id = a.job_level_id,
-                                                current_employee_id = c.employee_id,
-                                                employee_email = c.employee_email,
-                                                employee_name = c.employee_name,
-                                                ip_address = c.ip_address
-                                            }).ToList<AssetMutationViewModel>();
-
-                            if (_qry_Bod != null)
-                            {
-                                foreach (AssetMutationViewModel refApprovalBod in _qry_Bod)
-                                {
-                                    tr_mutation_approval mutation_approval = new tr_mutation_approval();
-                                    mutation_approval.request_id = mutation_request.request_id;
-                                    mutation_approval.approval_date = null;
-                                    mutation_approval.approval_location_id = /*refApproval.request_location_id*/ 0;
-                                    mutation_approval.approval_dept_id = refApprovalBod.request_dept_id;
-                                    mutation_approval.approval_employee_id = refApprovalBod.request_emp_id;
-                                    mutation_approval.approval_level_id = refApprovalBod.request_level_id;
-                                    mutation_approval.approval_status_id = 1;//waiting approval
-                                    mutation_approval.approval_noted = "";
-                                    mutation_approval.fl_active = true;
-                                    mutation_approval.created_date = DateTime.Now;
-                                    mutation_approval.created_by = UserProfile.UserId;
-                                    mutation_approval.updated_date = DateTime.Now;
-                                    mutation_approval.updated_by = UserProfile.UserId;
-                                    mutation_approval.deleted_date = null;
-                                    mutation_approval.deteled_by = null;
-                                    mutation_approval.org_id = UserProfile.OrgId;
-                                    mutation_approval = db.tr_mutation_approval.Add(mutation_approval);
-                                    db.SaveChanges();
-                                }
-                            }
                             //Approval BOD berdasarkan data ms_department >> employee_bod_id
-                            //ms_department dept = db.ms_department.Find(UserProfile.department_id);
+                            ms_department dept = db.ms_department.Find(UserProfile.department_id);
 
-                            //if (dept != null)
-                            //{
-                            //    tr_mutation_approval mutation_approval = new tr_mutation_approval();
-                            //    mutation_approval.request_id = mutation_request.request_id;
-                            //    mutation_approval.approval_date = null;
-                            //    mutation_approval.approval_location_id = /*refApproval.request_location_id*/ 0;
-                            //    mutation_approval.approval_dept_id = dept.department_id;
-                            //    mutation_approval.approval_employee_id = dept.employee_bod_id;
-                            //    mutation_approval.approval_level_id = 9;
-                            //    mutation_approval.approval_status_id = 1;//waiting approval
-                            //    mutation_approval.approval_noted = "";
-                            //    mutation_approval.fl_active = true;
-                            //    mutation_approval.created_date = DateTime.Now;
-                            //    mutation_approval.created_by = UserProfile.UserId;
-                            //    mutation_approval.updated_date = DateTime.Now;
-                            //    mutation_approval.updated_by = UserProfile.UserId;
-                            //    mutation_approval.deleted_date = null;
-                            //    mutation_approval.deteled_by = null;
-                            //    mutation_approval.org_id = UserProfile.company_id;
-                            //    mutation_approval = db.tr_mutation_approval.Add(mutation_approval);
-                            //    db.SaveChanges();
-                            //}
+                            if (dept != null)
+                            {
+                                tr_mutation_approval mutation_approval = new tr_mutation_approval();
+                                mutation_approval.request_id = mutation_request.request_id;
+                                mutation_approval.approval_date = null;
+                                mutation_approval.approval_location_id = /*refApproval.request_location_id*/ 0;
+                                mutation_approval.approval_dept_id = dept.department_id;
+                                mutation_approval.approval_employee_id = dept.employee_bod_id;
+                                mutation_approval.approval_level_id = 9;
+                                mutation_approval.approval_status_id = 1;//waiting approval
+                                mutation_approval.approval_noted = "";
+                                mutation_approval.fl_active = true;
+                                mutation_approval.created_date = DateTime.Now;
+                                mutation_approval.created_by = UserProfile.UserId;
+                                mutation_approval.updated_date = DateTime.Now;
+                                mutation_approval.updated_by = UserProfile.UserId;
+                                mutation_approval.deleted_date = null;
+                                mutation_approval.deteled_by = null;
+                                mutation_approval.org_id = UserProfile.company_id;
+                                mutation_approval = db.tr_mutation_approval.Add(mutation_approval);
+                                db.SaveChanges();
+                            }
                         }
 
                         #region "kirim email ke approval level 1"

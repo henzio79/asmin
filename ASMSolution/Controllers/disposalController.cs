@@ -33,23 +33,42 @@ namespace ASM_UI.Controllers
         {
             db.Configuration.ProxyCreationEnabled = false;
             var _qry = new object();
+
+            //mengambil job level terakhir yg belum di approve
+            var x_list_last_approval = (from c in db.tr_disposal_approval
+                                        where (c.approval_date != null && c.fl_active == true && c.deleted_date == null)
+                                        group c by c.request_id into g
+                                        select new
+                                        {
+                                            request_id = g.Key,
+                                            approval_id = g.Max(a => a.approval_id)
+                                        }).ToList().AsEnumerable();
+
+            IEnumerable<LastApprovalDTO> x_list_last = (from a in x_list_last_approval
+                                                        join b in db.tr_disposal_approval on a.approval_id equals b.approval_id
+                                                        select new LastApprovalDTO
+                                                        {
+                                                            request_id = b.request_id,
+                                                            approval_id = b.approval_id,
+                                                            approval_suggestion_id = b.approval_suggestion_id,
+                                                            approval_status_id = b.approval_status_id,
+                                                            approval_level_id = b.approval_level_id
+                                                        }).ToList<LastApprovalDTO>().AsEnumerable();
+
+            List<int> _list_id = x_list_last.Select(c => c.approval_id).ToList<int>();
+
             if (UserProfile.asset_reg_location_id == 2)
             {
+
+
                 _qry = (from dr in db.tr_disposal_request
                         where (dr.fl_active == true && dr.deleted_date == null)
                                 && dr.request_dept_id == UserProfile.department_id
                                 && dr.request_location_id == UserProfile.location_id
                         orderby dr.request_id descending
 
-                        //mengambil job level terakhir yg belum di approve
-                        join app in (from app in db.tr_disposal_approval
-                                     where (app.approval_date != null && app.fl_active == true && app.deleted_date == null)
-                                     orderby app.approval_id descending
-                                     group app by app.request_id into appsort
-                                     select appsort.FirstOrDefault())
-                                    on dr.request_id equals app.request_id
-                                    into leftapp
-                        from lftjoinapp in leftapp.DefaultIfEmpty()
+                        join app in db.tr_disposal_approval on dr.request_id equals app.request_id
+                        where _list_id.Contains(app.approval_id)
 
                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
                         //where (a.fl_active == true && a.deleted_date == null)
@@ -72,15 +91,15 @@ namespace ASM_UI.Controllers
                                 into leftg
                         from lftjoing in leftg.DefaultIfEmpty()
 
-                        join h in db.ms_disposal_type on lftjoinapp.approval_suggestion_id equals h.disposal_type_id
+                        join h in db.ms_disposal_type on app.approval_suggestion_id equals h.disposal_type_id
                                 into lefth
                         from lftjoinh in lefth.DefaultIfEmpty()
 
-                        join i in db.ms_request_status on lftjoinapp.approval_status_id equals i.request_status_id
+                        join i in db.ms_request_status on app.approval_status_id equals i.request_status_id
                          into lefti
                         from lftjoini in lefti.DefaultIfEmpty()
 
-                        join j in db.ms_job_level on lftjoinapp.approval_level_id equals j.job_level_id
+                        join j in db.ms_job_level on app.approval_level_id equals j.job_level_id
                          into leftj
                         from lftjoinj in leftj.DefaultIfEmpty()
 
@@ -105,11 +124,13 @@ namespace ASM_UI.Controllers
                             fl_fin_announcement = lftjoing.fl_fin_announcement,
                             fl_remove_asset = lftjoing.fl_remove_asset,
 
-                            approval_status_id = lftjoinapp.approval_status_id,
+                            approval_status_id = app.approval_status_id,
                             approval_status_Name = lftjoini.request_status_name,
                             approval_suggestion_name = lftjoinh.disposal_type_name,
                             approval_level_name = lftjoinj.job_level_name
-                        }).ToList<disposalViewModel>();
+
+                        }).ToList<disposalViewModel>().AsEnumerable();
+
             }
             else if (UserProfile.asset_reg_location_id == 1)
             {
@@ -119,15 +140,8 @@ namespace ASM_UI.Controllers
                                 //&& dr.request_location_id == UserProfile.location_id
                         orderby dr.request_id descending
 
-                        //mengambil job level terakhir yg belum di approve
-                        join app in (from app in db.tr_disposal_approval
-                                     where (app.approval_date != null && app.fl_active == true && app.deleted_date == null)
-                                     orderby app.approval_id descending
-                                     group app by app.request_id into appsort
-                                     select appsort.FirstOrDefault())
-                                    on dr.request_id equals app.request_id
-                                    into leftapp
-                        from lftjoinapp in leftapp.DefaultIfEmpty()
+                        join app in db.tr_disposal_approval on dr.request_id equals app.request_id
+                        where _list_id.Contains(app.approval_id)
 
                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
                         //where (a.fl_active == true && a.deleted_date == null)
@@ -150,15 +164,15 @@ namespace ASM_UI.Controllers
                                 into leftg
                         from lftjoing in leftg.DefaultIfEmpty()
 
-                        join h in db.ms_disposal_type on lftjoinapp.approval_suggestion_id equals h.disposal_type_id
+                        join h in db.ms_disposal_type on app.approval_suggestion_id equals h.disposal_type_id
                                 into lefth
                         from lftjoinh in lefth.DefaultIfEmpty()
 
-                        join i in db.ms_request_status on lftjoinapp.approval_status_id equals i.request_status_id
+                        join i in db.ms_request_status on app.approval_status_id equals i.request_status_id
                          into lefti
                         from lftjoini in lefti.DefaultIfEmpty()
 
-                        join j in db.ms_job_level on lftjoinapp.approval_level_id equals j.job_level_id
+                        join j in db.ms_job_level on app.approval_level_id equals j.job_level_id
                          into leftj
                         from lftjoinj in leftj.DefaultIfEmpty()
 
@@ -183,12 +197,14 @@ namespace ASM_UI.Controllers
                             fl_fin_announcement = lftjoing.fl_fin_announcement,
                             fl_remove_asset = lftjoing.fl_remove_asset,
 
-                            approval_status_id = lftjoinapp.approval_status_id,
+                            approval_status_id = app.approval_status_id,
                             approval_status_Name = lftjoini.request_status_name,
                             approval_suggestion_name = lftjoinh.disposal_type_name,
                             approval_level_name = lftjoinj.job_level_name
                         }).ToList<disposalViewModel>();
+
             }
+
             return Json(new { data = _qry }, JsonRequestBehavior.AllowGet);
         }
 

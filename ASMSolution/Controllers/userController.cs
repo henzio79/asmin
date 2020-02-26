@@ -45,12 +45,25 @@ namespace ASM_UI.Controllers
             return View();
         }
 
+        public JsonResult GetUserTypeList()
+        {
+            var UserTypeList = db.ms_user_type.Where(t => t.deleted_date == null && t.fl_active == true).Select(
+                t => new
+                {
+                    t.user_type_id,
+                    user_type_name = t.user_type_code + " - " + t.user_type_name,
+                }).ToList();
+            return Json(UserTypeList, JsonRequestBehavior.AllowGet);
+        }
+
+
+
         // POST: user/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "user_id,user_name,user_password,employee_id,fl_active,created_date,created_by,updated_date,updated_by,deleted_date,deleted_by,org_id")] ms_user ms_user)
+        public ActionResult Create([Bind(Include = "user_id,user_name,user_password,user_type_id,employee_id,fl_active,created_date,created_by,updated_date,updated_by,deleted_date,deleted_by,org_id")] ms_user ms_user)
         {
             if (ModelState.IsValid)
             {
@@ -84,7 +97,7 @@ namespace ASM_UI.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "user_id,user_name,user_password,employee_id,fl_active,created_date,created_by,updated_date,updated_by,deleted_date,deleted_by,org_id")] ms_user ms_user)
+        public ActionResult Edit([Bind(Include = "user_id,user_name,user_password,user_type_id,employee_id,fl_active,created_date,created_by,updated_date,updated_by,deleted_date,deleted_by,org_id")] ms_user ms_user)
         {
             if (ModelState.IsValid)
             {

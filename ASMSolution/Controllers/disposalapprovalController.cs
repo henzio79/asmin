@@ -6,6 +6,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web;
+using System.Data.SqlClient;
 using System.Web.Mvc;
 using ASM_UI.Models;
 using ASM_UI.App_Helpers;
@@ -30,35 +31,115 @@ namespace ASM_UI.Controllers
         public JsonResult GetDisposalList()
         {
             db.Configuration.ProxyCreationEnabled = false;
+            
+           //approval utama
+           var _qry = (from dr in db.tr_disposal_request
+                       where (dr.fl_active == true && dr.deleted_date == null)
+                              && dr.org_id == UserProfile.OrgId
+                              //&& dr.request_dept_id == UserProfile.department_id
+                              && dr.request_location_id == UserProfile.asset_reg_location_id
+                       orderby dr.request_id descending
 
-            //approval utama
-            var _qry = (from dr in db.tr_disposal_request
+                       //mengambil job level terakhir yg belum di approve
+                       join appnow in (from appnow in db.tr_disposal_approval
+                                       where appnow.approval_date == null
+                                       && appnow.fl_active == true && appnow.deleted_date == null
+
+                                       orderby appnow.approval_id ascending
+                                       group appnow by appnow.request_id into appnowsort
+                                       select appnowsort.FirstOrDefault())
+                                   on dr.request_id equals appnow.request_id
+
+                       //mengambil approval user login
+                       join app in (from app in db.tr_disposal_approval
+                                    where app.fl_active == true && app.deleted_date == null
+                                      && app.approval_employee_id == UserProfile.employee_id
+                                      && app.approval_status_id == 1
+                                    orderby app.approval_id ascending
+                                    group app by app.request_id into appsort
+                                    select appsort.FirstOrDefault())
+                                   on appnow.request_id equals app.request_id
+                       where (appnow.approval_employee_id == app.approval_employee_id)
+
+                       join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
+                       //where (a.fl_active == true && a.deleted_date == null)
+
+                       join b in db.ms_asmin_company on a.company_id equals b.company_id
+                       where (b.fl_active == true && b.deleted_date == null)
+
+                       join c in db.ms_department on dr.request_dept_id equals c.department_id
+                       where (c.fl_active == true && c.deleted_date == null)
+
+                       join d in db.ms_employee on dr.request_emp_id equals d.employee_id
+                       where (d.fl_active == true && d.deleted_date == null)
+
+                       join e in db.ms_asset_register_location on dr.request_location_id equals e.asset_reg_location_id
+                       where (e.fl_active == true && e.deleted_date == null)
+
+                       join f in db.ms_request_status on app.approval_status_id equals f.request_status_id
+
+                       join g in db.tr_disposal_announcement on dr.request_id equals g.request_id
+                              into leftg
+                       from lftjoing in leftg.DefaultIfEmpty()
+
+                       join h in db.ms_disposal_type on app.approval_suggestion_id equals h.disposal_type_id
+                               into lefth
+                       from lftjoinh in lefth.DefaultIfEmpty()
+
+                       join i in db.ms_request_status on app.approval_status_id equals i.request_status_id
+                        into lefti
+                       from lftjoini in lefti.DefaultIfEmpty()
+
+                       join j in db.ms_job_level on app.approval_level_id equals j.job_level_id
+                        into leftj
+                       from lftjoinj in leftj.DefaultIfEmpty()
+
+                       select new disposalViewModel()
+                       {
+                           asset_id = dr.asset_id,
+                           asset_number = a.asset_number,
+                           asset_name = a.asset_name,
+                           disposal_number = dr.disposal_number,
+                           request_id = dr.request_id,
+                           request_date = dr.request_date,
+                           request_status_id = f.request_status_id,
+                           request_status_name = f.request_status_name,
+                           fl_approval = dr.fl_approval,
+                           approval_date = dr.approval_date,
+
+                           company = b,
+                           department_name = c.department_code,
+                           employee_name = d.employee_name,
+                           location_name = e.asset_reg_location_name,
+
+                           fl_SuggestionChanges = lftjoing.fl_suggestion_changes,
+                           fl_announcement_status = lftjoing.fl_announcement_status,
+                           fl_fin_announcement = lftjoing.fl_fin_announcement,
+                           fl_remove_asset = lftjoing.fl_remove_asset,
+
+                           approval_id = app.approval_id,
+                           approval_status_id = app.approval_status_id,
+                           approval_status_Name = lftjoini.request_status_name,
+                           approval_suggestion_name = lftjoinh.disposal_type_name,
+                           approval_level_name = lftjoinj.job_level_name
+                       }).ToList<disposalViewModel>();
+
+           //Non approval
+           var _qry2 = (from dr in db.tr_disposal_request
                         where (dr.fl_active == true && dr.deleted_date == null)
-                               && dr.org_id == UserProfile.OrgId
+                               && dr.org_id == UserProfile.OrgId 
                                //&& dr.request_dept_id == UserProfile.department_id
                                && dr.request_location_id == UserProfile.asset_reg_location_id
                         orderby dr.request_id descending
 
-                        //mengambil job level terakhir yg belum di approve
-                        join appnow in (from appnow in db.tr_disposal_approval
-                                        where appnow.approval_date == null
-                                        && appnow.fl_active == true && appnow.deleted_date == null
-
-                                        orderby appnow.approval_id ascending
-                                        group appnow by appnow.request_id into appnowsort
-                                        select appnowsort.FirstOrDefault())
-                                    on dr.request_id equals appnow.request_id
-
                         //mengambil approval user login
                         join app in (from app in db.tr_disposal_approval
                                      where app.fl_active == true && app.deleted_date == null
-                                       && app.approval_employee_id == UserProfile.employee_id
-                                       && app.approval_status_id == 1
-                                     orderby app.approval_id ascending
+                                       && app.approval_employee_id == UserProfile.employee_id && app.approval_status_id > 1
+                                     orderby app.approval_id descending
                                      group app by app.request_id into appsort
                                      select appsort.FirstOrDefault())
-                                    on appnow.request_id equals app.request_id
-                        where (appnow.approval_employee_id == app.approval_employee_id)
+                                    on dr.request_id equals app.request_id
 
                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
                         //where (a.fl_active == true && a.deleted_date == null)
@@ -77,7 +158,7 @@ namespace ASM_UI.Controllers
 
                         join f in db.ms_request_status on app.approval_status_id equals f.request_status_id
 
-                        join g in db.tr_disposal_announcement on dr.request_id equals g.request_id
+                        join g in db.tr_disposal_announcement.Where(g => g.fl_active == true) on dr.request_id equals g.request_id
                                into leftg
                         from lftjoing in leftg.DefaultIfEmpty()
 
@@ -123,89 +204,9 @@ namespace ASM_UI.Controllers
                             approval_level_name = lftjoinj.job_level_name
                         }).ToList<disposalViewModel>();
 
-            //Non approval
-            var _qry2 = (from dr in db.tr_disposal_request
-                         where (dr.fl_active == true && dr.deleted_date == null)
-                                && dr.org_id == UserProfile.OrgId 
-                                //&& dr.request_dept_id == UserProfile.department_id
-                                && dr.request_location_id == UserProfile.asset_reg_location_id
-                         orderby dr.request_id descending
-
-                         //mengambil approval user login
-                         join app in (from app in db.tr_disposal_approval
-                                      where app.fl_active == true && app.deleted_date == null
-                                        && app.approval_employee_id == UserProfile.employee_id && app.approval_status_id > 1
-                                      orderby app.approval_id descending
-                                      group app by app.request_id into appsort
-                                      select appsort.FirstOrDefault())
-                                     on dr.request_id equals app.request_id
-
-                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
-                         //where (a.fl_active == true && a.deleted_date == null)
-
-                         join b in db.ms_asmin_company on a.company_id equals b.company_id
-                         where (b.fl_active == true && b.deleted_date == null)
-
-                         join c in db.ms_department on dr.request_dept_id equals c.department_id
-                         where (c.fl_active == true && c.deleted_date == null)
-
-                         join d in db.ms_employee on dr.request_emp_id equals d.employee_id
-                         where (d.fl_active == true && d.deleted_date == null)
-
-                         join e in db.ms_asset_register_location on dr.request_location_id equals e.asset_reg_location_id
-                         where (e.fl_active == true && e.deleted_date == null)
-
-                         join f in db.ms_request_status on app.approval_status_id equals f.request_status_id
-
-                         join g in db.tr_disposal_announcement.Where(g => g.fl_active == true) on dr.request_id equals g.request_id
-                                into leftg
-                         from lftjoing in leftg.DefaultIfEmpty()
-
-                         join h in db.ms_disposal_type on app.approval_suggestion_id equals h.disposal_type_id
-                                 into lefth
-                         from lftjoinh in lefth.DefaultIfEmpty()
-
-                         join i in db.ms_request_status on app.approval_status_id equals i.request_status_id
-                          into lefti
-                         from lftjoini in lefti.DefaultIfEmpty()
-
-                         join j in db.ms_job_level on app.approval_level_id equals j.job_level_id
-                          into leftj
-                         from lftjoinj in leftj.DefaultIfEmpty()
-
-                         select new disposalViewModel()
-                         {
-                             asset_id = dr.asset_id,
-                             asset_number = a.asset_number,
-                             asset_name = a.asset_name,
-                             disposal_number = dr.disposal_number,
-                             request_id = dr.request_id,
-                             request_date = dr.request_date,
-                             request_status_id = f.request_status_id,
-                             request_status_name = f.request_status_name,
-                             fl_approval = dr.fl_approval,
-                             approval_date = dr.approval_date,
-
-                             company = b,
-                             department_name = c.department_code,
-                             employee_name = d.employee_name,
-                             location_name = e.asset_reg_location_name,
-
-                             fl_SuggestionChanges = lftjoing.fl_suggestion_changes,
-                             fl_announcement_status = lftjoing.fl_announcement_status,
-                             fl_fin_announcement = lftjoing.fl_fin_announcement,
-                             fl_remove_asset = lftjoing.fl_remove_asset,
-
-                             approval_id = app.approval_id,
-                             approval_status_id = app.approval_status_id,
-                             approval_status_Name = lftjoini.request_status_name,
-                             approval_suggestion_name = lftjoinh.disposal_type_name,
-                             approval_level_name = lftjoinj.job_level_name
-                         }).ToList<disposalViewModel>();
-
-            _qry.AddRange(_qry2);
-
-            return Json(new { data = _qry }, JsonRequestBehavior.AllowGet);
+           _qry.AddRange(_qry2);
+           
+            return Json(null, JsonRequestBehavior.AllowGet);
         }
 
         // GET: DisposalApproval/details/5

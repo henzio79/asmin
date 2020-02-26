@@ -9,6 +9,15 @@ using ASM_UI;
 
 namespace ASM_UI.Models
 {
+    public class LastApprovalDTO
+    {
+        public int request_id { get; set; }
+        public int approval_id { get; set; }
+        public int? approval_suggestion_id { get; set; }
+        public int? approval_status_id { get; set; }
+        public int? approval_level_id { get; set; }
+    }
+
     public class disposalViewModel
     {
         public disposalViewModel()

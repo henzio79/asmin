@@ -63,18 +63,22 @@ namespace ASM_UI.Controllers
             int pageSize = rows;
 
             var _list = (from u1 in db.ms_user
+                         join u3 in db.ms_user_type on u1.user_type_id equals u3.user_type_id
                          where (u1.deleted_date == null)
                          join e in db.ms_employee on u1.employee_id equals e.employee_id
                          join u2 in db.ms_user on u1.updated_by equals u2.user_id
                          into t_joined
                          from row_join in t_joined.DefaultIfEmpty()
                          from usr in db.ms_user.Where(rec_udated_by => (rec_udated_by == null) ? false : rec_udated_by.user_id == row_join.user_id).DefaultIfEmpty()
+
                          select new
                          {
                              user_id = u1.user_id,
                              user_name = u1.user_name,
                              user_password = u1.user_password,
                              user_type_id = u1.user_type_id,
+                             user_type_name = u3.user_type_name,
+
                              employee_id = e.employee_id,
                              employee_nik = e.employee_nik,
                              employee_name = e.employee_name,
@@ -90,6 +94,7 @@ namespace ASM_UI.Controllers
                             user_name = c.user_name,
                             user_password = c.user_password,
                             user_type_id = c.user_type_id,
+                            user_type_name = c.user_type_name,
                             employee_id = c.employee_id,
                             employee_nik = c.employee_nik,
                             employee_name = c.employee_name,
@@ -184,6 +189,7 @@ namespace ASM_UI.Controllers
                     user_name = ms_user.user_name,
                     user_password =  App_Helpers.CryptorHelper.Decrypt(ms_user.user_password, "MD5", true),
                     user_type_id = ms_user.user_type_id,
+                    user_type_name = ms_user.ms_user_type.user_type_name,
 
                     employee_id = ms_user.ms_employee.employee_id,
                     employee_nik = ms_user.ms_employee.employee_nik,
@@ -450,6 +456,8 @@ namespace ASM_UI.Controllers
             db.SaveChanges();
             return RedirectToAction("Index");
         }
+
+
 
         [HttpPost]
         public JsonResult Cruduser_account()

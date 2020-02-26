@@ -25,6 +25,8 @@ namespace ASM_UI.Models
 
         [Display(Name = "User Type")]
         public int user_type_id { get; set; }
+
+        public string user_type_name { get; set; }
         public IEnumerable<SelectListItem> sli_user_type_list { get; set; }
 
         [Display(Name = "Employee")]

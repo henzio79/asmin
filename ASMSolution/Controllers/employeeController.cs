@@ -173,21 +173,40 @@ namespace ASM_UI.Controllers
                 else
                 {
                     //prepare for insert data
-                    ms_employee ms_emp = new ms_employee();
+
+                    //check if nik exists
+                    bool is_nik_exist = false;
+                    string str_nik = Request.Form["employee_nik"];
+                    ms_employee ms_emp = db.ms_employee.Where(c => c.employee_nik == str_nik).SingleOrDefault<ms_employee>();
+                    is_nik_exist = (ms_emp != null);
+                    if (!is_nik_exist)
+                    {
+                        ms_emp = new ms_employee();
+                    }
+
                     ms_emp.employee_nik = Request.Form["employee_nik"];
                     ms_emp.employee_name = Request.Form["employee_name"];
                     ms_emp.employee_email = Request.Form["employee_email"];
                     ms_emp.ip_address = Request.Form["ip_address"];
                     ms_emp.fl_active = Request.Form["rec_isactive"].ToLower().Equals("yes");
 
-                    ms_emp.created_by = UserProfile.UserId;
-                    ms_emp.created_date = DateTime.Now;
+                    if (!is_nik_exist)
+                    {
+                        ms_emp.created_by = UserProfile.UserId;
+                        ms_emp.created_date = DateTime.Now;
+                    }
                     ms_emp.updated_by = UserProfile.UserId;
                     ms_emp.updated_date = DateTime.Now;
                     ms_emp.org_id = UserProfile.OrgId;
                     ms_emp.deleted_by = null;
                     ms_emp.deleted_date = null;
-                    db.ms_employee.Add(ms_emp);
+
+                    //db.ms_employee.Add(ms_emp);
+                    if (!is_nik_exist)
+                        db.Entry(ms_emp).State = EntityState.Added;
+                    else
+                        db.Entry(ms_emp).State = EntityState.Modified;
+
                     db.SaveChanges();
                     return Json("Employee successfully saved", JsonRequestBehavior.AllowGet);
                 }
@@ -236,6 +255,7 @@ namespace ASM_UI.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+
             employee_setupViewModel model = new employee_setupViewModel()
             {
                 employee_id = emp_db.employee_id,
@@ -479,5 +499,34 @@ namespace ASM_UI.Controllers
             }
             return View(emp_setup);
         }
+
+        [HttpGet]
+        public JsonResult FetchRegisterLocation()
+        {
+            var data = db.ms_asset_register_location
+                .Where(c => c.fl_active == true)
+                .Select(l => new
+                {
+                    Value = l.asset_reg_location_id,
+                    Text = l.asset_reg_location_name
+                });
+            return Json(data, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public JsonResult FetchAssetLocation(int reg_location_id)
+        {
+            var data = db.ms_asset_location
+                .Where(l => l.asset_reg_location_id == reg_location_id && l.fl_active == true)
+                .Select(l => new
+                {
+                    Value = l.location_id,
+                    Text = l.location_name
+                });
+            return Json(data, JsonRequestBehavior.AllowGet);
+        }
+
+
+
     }
 }
