@@ -206,7 +206,7 @@ namespace ASM_UI.Controllers
 
            _qry.AddRange(_qry2);
            
-            return Json(null, JsonRequestBehavior.AllowGet);
+            return Json(_qry, JsonRequestBehavior.AllowGet);
         }
 
         // GET: DisposalApproval/details/5

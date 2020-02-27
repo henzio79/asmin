@@ -113,3 +113,27 @@ attr sama dgn nama kolom
                                                                   approval_status_id = b.approval_status_id,
                                                                   approval_level_id = b.approval_level_id
                                                               }).ToList<LastApprovalDTO>();
+
+
+
+
+
+
+
+
+truncate table tr_disposal_image
+truncate table tr_disposal_announcement
+truncate table tr_disposal_approval
+delete from tr_disposal_request
+dbcc checkident('tr_disposal_request', reseed,0)
+
+truncate table tr_mutation_process
+truncate table tr_mutation_approval
+delete from tr_mutation_request
+dbcc checkident('tr_mutation_request', reseed,0)
+
+
+--------------------------------------------
+Login Ops
+1205115
+Rino Prana
