@@ -67,8 +67,14 @@ namespace ASM_UI.Controllers
                                 && dr.request_location_id == UserProfile.location_id
                         orderby dr.request_id descending
 
-                        join app in db.tr_disposal_approval on dr.request_id equals app.request_id
-                        where _list_id.Contains(app.approval_id)
+                        join app in (from app in db.tr_disposal_approval
+                                     where _list_id.Contains(app.approval_id)
+                                     group app by app.request_id 
+                                     into appsort
+                                     select appsort.FirstOrDefault()
+                                     ) on dr.request_id equals app.request_id
+                        into leftapp
+                        from lftjoinapp in leftapp.DefaultIfEmpty()
 
                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
                         //where (a.fl_active == true && a.deleted_date == null)
@@ -91,15 +97,15 @@ namespace ASM_UI.Controllers
                                 into leftg
                         from lftjoing in leftg.DefaultIfEmpty()
 
-                        join h in db.ms_disposal_type on app.approval_suggestion_id equals h.disposal_type_id
+                        join h in db.ms_disposal_type on lftjoinapp.approval_suggestion_id equals h.disposal_type_id
                                 into lefth
                         from lftjoinh in lefth.DefaultIfEmpty()
 
-                        join i in db.ms_request_status on app.approval_status_id equals i.request_status_id
+                        join i in db.ms_request_status on lftjoinapp.approval_status_id equals i.request_status_id
                          into lefti
                         from lftjoini in lefti.DefaultIfEmpty()
 
-                        join j in db.ms_job_level on app.approval_level_id equals j.job_level_id
+                        join j in db.ms_job_level on lftjoinapp.approval_level_id equals j.job_level_id
                          into leftj
                         from lftjoinj in leftj.DefaultIfEmpty()
 
@@ -124,7 +130,7 @@ namespace ASM_UI.Controllers
                             fl_fin_announcement = lftjoing.fl_fin_announcement,
                             fl_remove_asset = lftjoing.fl_remove_asset,
 
-                            approval_status_id = app.approval_status_id,
+                            approval_status_id = lftjoinapp.approval_status_id,
                             approval_status_Name = lftjoini.request_status_name,
                             approval_suggestion_name = lftjoinh.disposal_type_name,
                             approval_level_name = lftjoinj.job_level_name
@@ -136,12 +142,18 @@ namespace ASM_UI.Controllers
             {
                 _qry = (from dr in db.tr_disposal_request
                         where (dr.fl_active == true && dr.deleted_date == null)
-                                //&& dr.request_dept_id == UserProfile.department_id
-                                //&& dr.request_location_id == UserProfile.location_id
+                        //&& dr.request_dept_id == UserProfile.department_id
+                        //&& dr.request_location_id == UserProfile.location_id
                         orderby dr.request_id descending
 
-                        join app in db.tr_disposal_approval on dr.request_id equals app.request_id
-                        where _list_id.Contains(app.approval_id)
+                        join app in (from app in db.tr_disposal_approval
+                                     where _list_id.Contains(app.approval_id)
+                                     group app by app.request_id
+                                     into appsort
+                                     select appsort.FirstOrDefault()
+                                     ) on dr.request_id equals app.request_id
+                        into leftapp
+                        from lftjoinapp in leftapp.DefaultIfEmpty()
 
                         join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
                         //where (a.fl_active == true && a.deleted_date == null)
@@ -164,15 +176,15 @@ namespace ASM_UI.Controllers
                                 into leftg
                         from lftjoing in leftg.DefaultIfEmpty()
 
-                        join h in db.ms_disposal_type on app.approval_suggestion_id equals h.disposal_type_id
+                        join h in db.ms_disposal_type on lftjoinapp.approval_suggestion_id equals h.disposal_type_id
                                 into lefth
                         from lftjoinh in lefth.DefaultIfEmpty()
 
-                        join i in db.ms_request_status on app.approval_status_id equals i.request_status_id
+                        join i in db.ms_request_status on lftjoinapp.approval_status_id equals i.request_status_id
                          into lefti
                         from lftjoini in lefti.DefaultIfEmpty()
 
-                        join j in db.ms_job_level on app.approval_level_id equals j.job_level_id
+                        join j in db.ms_job_level on lftjoinapp.approval_level_id equals j.job_level_id
                          into leftj
                         from lftjoinj in leftj.DefaultIfEmpty()
 
@@ -197,7 +209,7 @@ namespace ASM_UI.Controllers
                             fl_fin_announcement = lftjoing.fl_fin_announcement,
                             fl_remove_asset = lftjoing.fl_remove_asset,
 
-                            approval_status_id = app.approval_status_id,
+                            approval_status_id = lftjoinapp.approval_status_id,
                             approval_status_Name = lftjoini.request_status_name,
                             approval_suggestion_name = lftjoinh.disposal_type_name,
                             approval_level_name = lftjoinj.job_level_name
@@ -448,7 +460,7 @@ namespace ASM_UI.Controllers
 
                         //Save Approval Dept. Head
                         var _qry = (from sa in db.sy_ref_approval_level
-                                    where sa.asset_reg_location_id == disposal_req.location_id && sa.job_level_id == 3
+                                    where sa.asset_reg_location_id == disposal_req.location_id && sa.job_level_id == 2
 
                                     join a in db.ms_job_level on sa.job_level_id equals a.job_level_id
                                     where (a.fl_active == true && a.deleted_date == null)
@@ -506,28 +518,28 @@ namespace ASM_UI.Controllers
 
                         //Save Approval Dept. Head
                         var _qry_ktt = (from sa in db.sy_ref_approval_level
-                                    where sa.asset_reg_location_id == disposal_req.location_id && sa.job_level_id == 3
+                                        where sa.asset_reg_location_id == disposal_req.location_id && sa.job_level_id == 3
 
-                                    join a in db.ms_job_level on sa.job_level_id equals a.job_level_id
-                                    where (a.fl_active == true && a.deleted_date == null)
+                                        join a in db.ms_job_level on sa.job_level_id equals a.job_level_id
+                                        where (a.fl_active == true && a.deleted_date == null)
 
-                                    join b in db.ms_employee_detail on a.job_level_id equals b.job_level_id
-                                    where (b.fl_active == true && b.deleted_date == null
-                                            && b.company_id == UserProfile.company_id)
+                                        join b in db.ms_employee_detail on a.job_level_id equals b.job_level_id
+                                        where (b.fl_active == true && b.deleted_date == null
+                                                && b.company_id == UserProfile.company_id)
 
-                                    join c in db.ms_employee on b.employee_id equals c.employee_id
-                                    where c.fl_active == true && c.deleted_date == null
+                                        join c in db.ms_employee on b.employee_id equals c.employee_id
+                                        where c.fl_active == true && c.deleted_date == null
 
-                                    orderby sa.order_no ascending
-                                    select new disposalViewModel()
-                                    {
-                                        department_id = b.department_id,
-                                        employee_id = b.employee_id,
-                                        job_level_id = a.job_level_id,
-                                        employee_email = c.employee_email,
-                                        employee_name = c.employee_name,
-                                        ip_address = c.ip_address
-                                    }).ToList<disposalViewModel>();
+                                        orderby sa.order_no ascending
+                                        select new disposalViewModel()
+                                        {
+                                            department_id = b.department_id,
+                                            employee_id = b.employee_id,
+                                            job_level_id = a.job_level_id,
+                                            employee_email = c.employee_email,
+                                            employee_name = c.employee_name,
+                                            ip_address = c.ip_address
+                                        }).ToList<disposalViewModel>();
                         int count_ktt = 1;
                         int approval_id_ktt = 0;
 
